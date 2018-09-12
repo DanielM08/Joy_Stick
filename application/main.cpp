@@ -24,6 +24,7 @@ std::string execmd(char *cmd)
 }
 
 void send_key(std::string key);
+std::string get_gpio_direction(int gpio);
 bool listen_gpio(int gpio);
 int listen_ain(int ain);
 
@@ -40,6 +41,21 @@ void send_key(std::string key){
 	fwrite(key.c_str(), sizeof(char), key.size(),stdin);
 }
 
+std::string get_gpio_direction(int gpio){
+	std::string direction;
+    std::string gpio_name = "/sys/class/gpio";
+    gpio_name += std::to_string(gpio);
+    gpio_name += "/direction";
+    std::ifstream input(gpio_name.c_str());
+    if (!input.is_open()) {
+            std::cerr << "gpio/get-direction";
+            return nullptr;
+    }
+
+    if(!(input >> direction)) return nullptr;
+    return direction;
+}
+
 bool listen_gpio(int gpio){
 	int value;
     std::string gpio_name = "/sys/class/gpio";
@@ -51,7 +67,7 @@ bool listen_gpio(int gpio){
             return false;
     }
 
-    if(!(ainput >> value)) return false;
+    if(!(gpioput >> value)) return false;
     return value == 1;
 }
 
