@@ -30,8 +30,7 @@ int listen_ain(int ain);
 int main(int argc, char* argv[]){
 	const int gpio_btn1 = 0;
 	const int gpio_btn2 = 0;
-	const int ain_pot_l = 0;
-	const int ain_pot_r = 0;
+	const int ain_pot = 0;
 	const int ain_ldr = 0;
 
 	return 0;
@@ -42,10 +41,18 @@ void send_key(std::string key){
 }
 
 bool listen_gpio(int gpio){
-	unsigned int value;
-	gpio_get_value(gpio, &value);
-	if(value == 1) return true;
-	else return false;
+	int value;
+    std::string gpio_name = "/sys/class/gpio";
+    gpio_name += std::to_string(gpio);
+    gpio_name += "/value";
+    std::ifstream gpioput(gpio_name.c_str());
+    if (!gpioput.is_open()) {
+            std::cerr << "gpio/get-value";
+            return false;
+    }
+
+    if(!(ainput >> value)) return false;
+    return value == 1;
 }
 
 int listen_ain(int ain){
