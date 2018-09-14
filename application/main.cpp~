@@ -132,7 +132,7 @@ void ldrReady(int pin, char key)
 }
 
 void send_key(char key){
-	fwrite(&key, sizeof(char), 1 ,stdin);
+	fwrite(key, sizeof(char), 1 ,stdin);
 }
 
 std::string get_gpio_direction(int gpio){
