@@ -2,6 +2,7 @@
 #include <string>
 #include <fstream>
 #include <Gpio-int-test.h>
+#include <thread>
 
 // Função que executa um comando no terminal e retorna o que seria printado
 // como string
@@ -23,10 +24,17 @@ std::string execmd(char *cmd)
     return result;
 }
 
+bool potPriority = false;
+bool ldrPriority = false;
+
 void send_key(std::string key);
 std::string get_gpio_direction(int gpio);
 bool listen_gpio(int gpio);
 int listen_ain(int ain);
+
+void buttonRead(int, std::string);
+void potRead(int, std::string, std::string);
+void ldrRead(int, std::string);
 
 int main(int argc, char* argv[]){
 	const int gpio_btn1 = 0;
@@ -34,7 +42,93 @@ int main(int argc, char* argv[]){
 	const int ain_pot = 0;
 	const int ain_ldr = 0;
 
+
+	/*Inicializar componentes*/	
+	/*Setar teclas de cada componente*/
+
+	std::thread pot(potRead, ain_pot, "a", "d");
+    std::thread button1(buttonRead, gpio_btn1, "w");
+	std::thread button2(buttonRead, gpio_btn2, "x");
+    std::thread ldr(ldrRead, ain_ldr, "s");
+
+	pot.join();
+    button1.join();
+    button2.join();
+    ldr.join();
+	
 	return 0;
+}
+
+void buttonRead(int pin, std::string key)
+{
+    while (1)
+    {
+        if (!potPriority && !ldrPriority)
+        {
+            if (listen_gpio(pin)) 
+                send_key(key);
+        }
+        sleep(1);
+    }
+}
+
+void potRead(int pin, std::string keyLeft, std::string keyRight)
+{
+    int value = 0;
+    int prevValue = 0;
+
+    while (1)
+    {
+        value = listen_ain(pin);
+
+        if (prevValue == value)
+        {
+            potPriority = false;
+        }
+        else
+        {
+            potPriority = true;
+            prevValue = value;
+        }
+
+        if (value == -1)
+        {
+           send_key(keyLeft);
+        }
+        else if (value == 1)
+        {
+           send_key(keyRight);
+        }
+
+        sleep(1);
+    }
+}
+
+void ldrRead(int pin, std::string key)
+{
+    int value = 0;
+ 
+    while (1)
+    {
+        if (!potPriority)
+        {
+            value = listen_ain(pin);
+
+            if (value == 1)
+            {
+                ldrPriority = false;
+            }
+            else
+            {
+                ldrPriority = true;
+                while (listen_ain(pin) < 0)
+                {
+                    send_key(key);
+                }
+            }
+            sleep(1);
+        }
+    }
 }
 
 void send_key(std::string key){
