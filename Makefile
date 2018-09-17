@@ -14,7 +14,9 @@ APP = ${APPDIR}/main.cpp
 
 SRC = $(wildcard $(SRCDIR)/*.cpp)
 OBJS = $(patsubst $(SRCDIR)/%.cpp,$(OBJDIR)/%.o,$(SRC))
+OBJSARM = $(patsubst $(SRCDIR)/%.cpp,$(OBJDIR)/%.o,$(SRC))
 APPOBJ = $(patsubst $(APPDIR)/%.cpp,$(OBJDIR)/%.o,$(APP))
+APPOBJARM = $(patsubst $(APPDIR)/%.cpp,$(OBJDIR)/%.o,$(APP))
 
 _TESTS = $(wildcard $(TESTDIR)/*.cpp)
 TESTS = $(patsubst %.cpp,%,$(_TESTS))
@@ -28,8 +30,14 @@ $(APPOBJ): $(APP)
 ${OBJDIR}/%.o: $(SRCDIR)/%.cpp
 	$(CC) -c -o $@ $< $(CFLAGS)
 
-arm: $(OBJS) $(APPOBJ)
-	$(CCARM) -o $(BIN) $(APPOBJ) $(OBJS) $(CFLAGS) $(LDFLAGS)
+$(APPOBJARM): $(APP)
+	$(CCARM) -c -o $@ $< $(CFLAGS)
+
+${OBJDIR}/%.o: $(SRCDIR)/%.cpp
+	$(CCARM) -c -o $@ $< $(CFLAGS)
+
+arm: $(OBJSARM) $(APPOBJARM)
+	$(CCARM) -o $(BIN) $(APPOBJARM) $(OBJSARM) $(CFLAGS) $(LDFLAGS)
 
 test: $(TESTS) 
 	$(info ************  Testes concluídos com sucesso! ************)
